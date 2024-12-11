@@ -24,7 +24,7 @@ namespace FrontApiPessoal.Controllers
         }
 
 
-     [HttpGet]
+         [HttpGet]
         public async Task<IActionResult> IndexAsync()
         {
             try
@@ -113,67 +113,114 @@ namespace FrontApiPessoal.Controllers
         }
 
 
+        [HttpGet]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public async Task<ActionResult> EditAsync(int? id)
         {
-            return View("Error!");
+            try
+            {
+                HttpClient httpClient = new HttpClient();
+                string token = HttpContext.Session.GetString("SessionTokenUsuario");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                HttpResponseMessage response = await httpClient.GetAsync(uriBase + id.ToString());
+
+                string serialized = await response.Content.ReadAsStringAsync();
+
+                if(response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    ParteViewModel p = await Task.Run(() =>
+                    JsonConvert.DeserializeObject<ParteViewModel>(serialized));
+                    return View();
+                }
+                else
+            throw new System.Exception(serialized);
+            }
+            catch(System.Exception ex)
+            {
+                TempData["MensagemErro"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+
         }
+
+        [HttpPost]
+
+        public async Task<ActionResult> EditAsync(ParteViewModel p)
+        {
+            try
+            {
+                HttpClient httpClient = new HttpClient();
+                string token = HttpContext.Session.GetString("SessionTokenUsuario");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var content = new StringContent(JsonConvert.SerializeObject(p));
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+                HttpResponseMessage response = await httpClient.PutAsync(uriBase, content);
+                string serialized = await response.Content.ReadAsStringAsync();
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    TempData["Mensagem"] =
+                    string.Format("Parte {0} Atualiada com sucesso!", p.Nome);
+
+                    return RedirectToAction("Index");
+                }
+                else
+                    throw new System.Exception(serialized);
+            }
+             catch(System.Exception ex)
+                {
+                    TempData["MensagemErro"] = ex.Message;
+                    return RedirectToAction("Index");
+                }
+        } 
+
+
+
+
+        [HttpGet]
+
+        public async Task<ActionResult> DeleteAsync(int id)
+        {
+            try
+            {
+                HttpClient httpClient = new HttpClient();
+                string token = HttpContext.Session.GetString("SessionTokenUsuario");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                HttpResponseMessage response = await httpClient.DeleteAsync(uriBase + id.ToString());
+                string serialized = await response.Content.ReadAsStringAsync();
+
+                if(response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    TempData["Mensagem"] = string.Format("Parte {0} removida com sucesso!", id);
+                    return RedirectToAction("Index");
+                }
+                else
+                    throw new System.Exception(serialized);
+            }
+                catch(System.Exception ex)
+                {
+                    TempData["MensagemErro"] = ex.Message;
+                    return RedirectToAction("Index");
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }
